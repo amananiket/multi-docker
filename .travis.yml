@@ -1,0 +1,20 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+  - docker build -t aaniket/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true aaniket/react-test npm run test -- --coverage --watchAll=false
+
+after_success:
+  - docker build -t aaniket/multi-client ./client
+  - docker build -t aaniket/multi-nginx ./nginx
+  - docker build -t aaniket/multi-server ./server
+  - docker build -t aaniket/multi-worker ./worker
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push aaniket/multi-client
+  - docker push aaniket/multi-nginx
+  - docker push aaniket/multi-worker
+  - docker push aaniket/multi-server
